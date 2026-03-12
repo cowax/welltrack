@@ -1,0 +1,9 @@
+export { LoginPage } from './LoginPage';
+export { RegisterPage } from './RegisterPage';
+export { ForgotPasswordPage } from './ForgotPasswordPage';
+export { ResetPasswordPage } from './ResetPasswordPage';
+export { DashboardPage } from './DashboardPage';
+export { LogPage } from './LogPage';
+export { HistoryPage } from './HistoryPage';
+export { TrendsPage } from './TrendsPage';
+export { SettingsPage } from './SettingsPage';

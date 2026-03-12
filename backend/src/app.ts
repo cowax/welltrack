@@ -1,37 +1,41 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
-import morgan from 'morgan';
-import helmet from 'helmet';
+import healthRouter from './routes/health';
+import authRouter from './routes/auth';
+import usersRouter from './routes/users';
+import statsRouter from './routes/stats';
+import symptomsRouter from './routes/symptoms';
+import symptomLogsRouter from './routes/symptomLogs';
+import moodLogsRouter from './routes/moodLogs';
+import medicationsRouter from './routes/medications';
+import medicationLogsRouter from './routes/medicationLogs';
+import habitsRouter from './routes/habits';
+import habitLogsRouter from './routes/habitLogs';
+import { errorHandler, notFoundHandler } from './errors';
 
-const app = express();
+const app: Express = express();
 
-// Security headers
-app.use(helmet());
-
-// CORS — allow configured origin or localhost in development
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:5173'];
-
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
-
-// Request logging
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-
-// Body parsing
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Health check
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
+// Routes
+app.use('/api/health', healthRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/stats', statsRouter);
+app.use('/api/symptoms', symptomsRouter);
+app.use('/api/symptom-logs', symptomLogsRouter);
+app.use('/api/mood-logs', moodLogsRouter);
+app.use('/api/medications', medicationsRouter);
+app.use('/api/medication-logs', medicationLogsRouter);
+app.use('/api/habits', habitsRouter);
+app.use('/api/habit-logs', habitLogsRouter);
 
-// Routes (added in later tasks)
+// 404 handler
+app.use(notFoundHandler);
+
+// Error handler
+app.use(errorHandler);
 
 export default app;

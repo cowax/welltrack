@@ -1,5 +1,5 @@
-node_modules/
-dist/
+node_modules
+# Keep environment variables out of version control
 .env
-.env.test
-*.js.map
+
+/src/generated/prisma
