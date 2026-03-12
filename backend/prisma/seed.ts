@@ -1,69 +1,87 @@
-import { PrismaClient, TrackingType } from '@prisma/client';
+import 'dotenv/config';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient, TrackingType } from '../src/generated/prisma/client';
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+const defaultSymptoms = [
+  { name: 'Headache', category: 'pain' },
+  { name: 'Fatigue', category: 'general' },
+  { name: 'Joint Pain', category: 'pain' },
+  { name: 'Muscle Pain', category: 'pain' },
+  { name: 'Nausea', category: 'digestive' },
+  { name: 'Brain Fog', category: 'neurological' },
+  { name: 'Dizziness', category: 'neurological' },
+  { name: 'Insomnia', category: 'sleep' },
+  { name: 'Anxiety', category: 'mental' },
+  { name: 'Stomach Pain', category: 'digestive' },
+  { name: 'Back Pain', category: 'pain' },
+];
+
+const defaultHabits = [
+  { name: 'Sleep Duration', trackingType: TrackingType.duration, unit: 'hours' },
+  { name: 'Water Intake', trackingType: TrackingType.numeric, unit: 'glasses' },
+  { name: 'Exercise', trackingType: TrackingType.boolean, unit: null },
+  { name: 'Alcohol', trackingType: TrackingType.boolean, unit: null },
+  { name: 'Caffeine', trackingType: TrackingType.numeric, unit: 'cups' },
+];
 
 async function main() {
-  console.log('Seeding default symptoms...');
+  console.log('Seeding database...');
 
-  const symptoms = [
-    { name: 'Headache', category: 'neurological' },
-    { name: 'Fatigue', category: 'general' },
-    { name: 'Joint Pain', category: 'pain' },
-    { name: 'Muscle Pain', category: 'pain' },
-    { name: 'Nausea', category: 'digestive' },
-    { name: 'Brain Fog', category: 'neurological' },
-    { name: 'Dizziness', category: 'neurological' },
-    { name: 'Insomnia', category: 'sleep' },
-    { name: 'Anxiety', category: 'mental' },
-    { name: 'Stomach Pain', category: 'digestive' },
-    { name: 'Back Pain', category: 'pain' },
-  ];
-
-  for (const symptom of symptoms) {
-    await prisma.symptom.upsert({
+  // Seed default symptoms (userId = null for system defaults)
+  for (const symptom of defaultSymptoms) {
+    const existing = await prisma.symptom.findFirst({
       where: {
-        // system symptoms have no userId; use name as the unique key for seeding
-        id: `system-symptom-${symptom.name.toLowerCase().replace(/ /g, '-')}`,
-      },
-      update: {},
-      create: {
-        id: `system-symptom-${symptom.name.toLowerCase().replace(/ /g, '-')}`,
-        userId: null,
         name: symptom.name,
-        category: symptom.category,
-        isActive: true,
-      },
-    });
-  }
-
-  console.log('Seeding default habits...');
-
-  const habits: { name: string; trackingType: TrackingType; unit: string | null }[] = [
-    { name: 'Sleep Duration', trackingType: TrackingType.duration, unit: 'hours' },
-    { name: 'Water Intake', trackingType: TrackingType.numeric, unit: 'glasses' },
-    { name: 'Exercise', trackingType: TrackingType.boolean, unit: null },
-    { name: 'Alcohol', trackingType: TrackingType.boolean, unit: null },
-    { name: 'Caffeine', trackingType: TrackingType.numeric, unit: 'cups' },
-  ];
-
-  for (const habit of habits) {
-    await prisma.habit.upsert({
-      where: {
-        id: `system-habit-${habit.name.toLowerCase().replace(/ /g, '-')}`,
-      },
-      update: {},
-      create: {
-        id: `system-habit-${habit.name.toLowerCase().replace(/ /g, '-')}`,
         userId: null,
-        name: habit.name,
-        trackingType: habit.trackingType,
-        unit: habit.unit,
-        isActive: true,
       },
     });
+
+    if (!existing) {
+      await prisma.symptom.create({
+        data: {
+          name: symptom.name,
+          category: symptom.category,
+          userId: null,
+          isActive: true,
+        },
+      });
+      console.log(`Created symptom: ${symptom.name}`);
+    } else {
+      console.log(`Symptom already exists: ${symptom.name}`);
+    }
   }
 
-  console.log('Done.');
+  // Seed default habits (userId = null for system defaults)
+  for (const habit of defaultHabits) {
+    const existing = await prisma.habit.findFirst({
+      where: {
+        name: habit.name,
+        userId: null,
+      },
+    });
+
+    if (!existing) {
+      await prisma.habit.create({
+        data: {
+          name: habit.name,
+          trackingType: habit.trackingType,
+          unit: habit.unit,
+          userId: null,
+          isActive: true,
+        },
+      });
+      console.log(`Created habit: ${habit.name}`);
+    } else {
+      console.log(`Habit already exists: ${habit.name}`);
+    }
+  }
+
+  console.log('Seeding complete!');
 }
 
 main()
@@ -73,4 +91,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
