@@ -15,7 +15,7 @@ model User {
   id          String   @id @default(uuid())
   email       String   @unique
   passwordHash String  @map("password_hash")
-  displayName String   @map("display_name")
+  displayName  String? @map("display_name")
   timezone    String   @default("UTC")
   createdAt   DateTime @default(now()) @map("created_at")
 
@@ -39,7 +39,7 @@ model Symptom {
   id       String  @id @default(uuid())
   userId   String? @map("user_id")
   name     String
-  category String
+  category String?
   isActive Boolean @default(true) @map("is_active")
 
   user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
