@@ -8,5 +8,4 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.ts', '!src/**/__tests__/**', '!src/index.ts'],
   coverageDirectory: 'coverage',
   verbose: true,
-  // Run tests serially to prevent parallel DB access conflicts
 };

@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { createHabitSchema, updateHabitSchema } from '../validators/habit';
 import { AppError, ErrorCode } from '../errors';
-import { TrackingType } from '@prisma/client';
+import { TrackingType } from '../generated/prisma/enums';
 
 const router = Router();
 
